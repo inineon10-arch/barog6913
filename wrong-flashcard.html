@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f5f0eb">
 <meta name="referrer" content="no-referrer">
-<title>오답 단어장 – 박혜인</title>
+<title>오답 단어장</title>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -105,11 +105,11 @@
 <div id="app">
   <div class="header">
     <div class="header-left">
-      <div class="name">바로그영어 · 박혜인</div>
-      <div class="title">오답 단어장</div>
+      <div class="name" id="hdr-name">바로그영어</div>
+      <div class="title" id="hdr-title">오답 단어장</div>
     </div>
     <div class="header-right">
-      <div class="index-display"><span id="cur">1</span><span> / <span id="tot">21</span></span></div>
+      <div class="index-display"><span id="cur">1</span><span> / <span id="tot">8</span></span></div>
       <div style="display:flex;align-items:center;gap:8px;">
         <button class="random-btn" id="btn-random" type="button">🔀 랜덤</button>
         <div class="mode-chip">
@@ -125,6 +125,7 @@
     <div class="swipe-indicator ind-next" id="ind-next">다음 →</div>
     <div class="swipe-indicator ind-up" id="ind-up">↑ 뒤집기</div>
     <div class="swipe-indicator ind-down" id="ind-down">↓ 뒤집기</div>
+    <div id="status-msg" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:20px;font-size:0.95rem;color:var(--text2);max-width:300px;line-height:1.6;"></div>
   </div>
   <div class="nav-hint">
     <div class="nav-item"><span class="nav-arrow">→</span> 이전 단어</div>
@@ -133,96 +134,27 @@
   </div>
 </div>
 <script>
-const cards = [
-  { num:3, word:'suppress', pos:'동사', type:'wrong',
-    correct:'억제하다, 진압하다', student:'압도하다',
-    tip:'op-press(억압하다)\'는 위에서 누르는 것, \'sup-press(억제하다)\'는 아래로 누르는 느낌으로 구분하세요.',
-    example:'The government tried to <em>suppress</em> the rebellion with military force.' },
-  { num:5, word:'call for', pos:'구동사', type:'blank',
-    correct:'요구하다, 필요로 하다', student:'(무응답)',
-    tip:'call(부르다)\' + \'for(~을 위해)\' = ~을 위해 목소리를 내다 → \'요구하다\'로 암기하세요.',
-    example:'The protesters are <em>calling for</em> the resignation of the prime minister.' },
-  { num:6, word:'generic', pos:'형용사', type:'blank',
-    correct:'일반적인, 포괄적인', student:'(무응답)',
-    tip:'general(일반적인)\'과 발음이 비슷하죠? 상표 이름이 아닌 \'일반적인\' 상품을 의미할 때도 쓰여요.',
-    example:'Smartphone\' has become a <em>generic</em> term for any mobile phone with internet access.' },
-  { num:13, word:'conspire', pos:'동사', type:'blank',
-    correct:'공모하다, 음모를 꾸미다', student:'(무응답)',
-    tip:'con(함께)\' + \'spire(숨쉬다)\' = 함께 숨죽이며 비밀스럽게 \'음모를 꾸미다\'로 연상해보세요.',
-    example:'The criminals were caught as they began to <em>conspire</em> to rob the bank.' },
-  { num:15, word:'come along', pos:'구동사', type:'blank',
-    correct:'나타나다, 동행하다', student:'(무응답)',
-    tip:'come(오다)\' + \'along(따라서)\' = 따라서 오다 → \'동행하다\', (기회가) \'나타나다\'로 확장하세요.',
-    example:'A great opportunity has <em>come along</em>, and I think you should take it.' },
-  { num:16, word:'play along (with)', pos:'구동사', type:'blank',
-    correct:'동조하다, ~에 맞장구치다', student:'(무응답)',
-    tip:'play(연기하다)\' + \'along(따라서)\' = 남을 따라서 연기하다 → \'~에 맞장구치다\'로 기억하세요.',
-    example:'I knew he was lying, but I decided to <em>play along with</em> his story for a while.' },
-  { num:18, word:'opponent', pos:'명사', type:'wrong',
-    correct:'상대, 반대자', student:'반대의',
-    tip:'반대의\'라는 뜻의 형용사는 opposite입니다. -ent는 student처럼 사람을 뜻하는 경우가 많아요.',
-    example:'In the final match, she will face her toughest <em>opponent</em> yet.' },
-  { num:19, word:'oppress', pos:'동사', type:'wrong',
-    correct:'억압하다, 탄압하다', student:'반대하다',
-    tip:'반대하다(oppose)\'와 혼동 주의! \'press(누르다)\'가 붙어 \'억압하다\'라는 더 강한 의미입니다.',
-    example:'The dictator was known to <em>oppress</em> anyone who disagreed with his policies.' },
-  { num:23, word:'receptive', pos:'형용사', type:'blank',
-    correct:'수용적인', student:'(무응답)',
-    tip:'receive(받다)\'에서 온 단어입니다. 새로운 것을 잘 \'받아들이는\', 즉 \'수용적인\' 태도를 의미해요.',
-    example:'The new manager was very <em>receptive</em> to suggestions from the staff.' },
-  { num:24, word:'go for', pos:'구동사', type:'blank',
-    correct:'선택하다, ~을 목표로 하다', student:'(무응답)',
-    tip:'~을 향해(for) 가다(go)\'는 것은 그것을 \'선택하다\', \'목표로 하다\'는 의미로 확장됩니다.',
-    example:'I think I\'ll <em>go for</em> the chocolate cake for dessert.' },
-  { num:30, word:'compress', pos:'동사', type:'blank',
-    correct:'압축하다', student:'(무응답)',
-    tip:'com(함께)\' + \'press(누르다)\' = 함께 눌러서 부피를 줄이는 \'압축하다\'를 떠올리세요.',
-    example:'You can <em>compress</em> the file to make it smaller before sending it via email.' },
-  { num:31, word:'definite', pos:'형용사', type:'wrong',
-    correct:'확실한, 명확한', student:'무한한',
-    tip:'무한한(infinite)\'과 반대말! \'define(정의하다)\'에서 와서 \'확실한, 명확한\' 뜻입니다.',
-    example:'We need a <em>definite</em> answer by tomorrow so we can finalize the plans.' },
-  { num:32, word:'assert', pos:'동사', type:'wrong',
-    correct:'주장하다, 단언하다', student:'가하다',
-    tip:'자신의 의견을 대화 속에 \'넣다(insert)\'처럼 자신있게 \'주장하다\'라고 기억해보세요.',
-    example:'You need to <em>assert</em> your rights and not let them take advantage of you.' },
-  { num:34, word:'aspire', pos:'동사', type:'blank',
-    correct:'열망하다, 갈망하다', student:'(무응답)',
-    tip:'spirit(영혼)\'이 무언가를 향해 숨쉬는(spire) 모습, 즉 \'열망하다\'를 연상하세요.',
-    example:'Many young athletes <em>aspire</em> to compete in the Olympic Games.' },
-  { num:35, word:'feasible', pos:'형용사', type:'blank',
-    correct:'실행 가능한', student:'(무응답)',
-    tip:'실행(feas-)\'이 \'가능한(-ible)\'의 조합입니다. \'possible\'보다 구체적인 실행 가능성을 뜻해요.',
-    example:'Building a new bridge in just three months is not a <em>feasible</em> plan.' },
-  { num:36, word:'geothermal', pos:'형용사', type:'blank',
-    correct:'지열의', student:'(무응답)',
-    tip:'geo(땅)\' + \'thermal(열)\' = \'지열의\'. 단어를 쪼개서 의미를 유추해보세요.',
-    example:'Iceland makes extensive use of <em>geothermal</em> energy for heating and electricity.' },
-  { num:37, word:'divert', pos:'동사', type:'wrong',
-    correct:'방향을 바꾸다, 전환하다', student:'다양한',
-    tip:'다양한(diverse)\'과 혼동 주의! \'di(떨어져)\' + \'vert(돌리다)\' = \'방향을 바꾸다\'입니다.',
-    example:'The police had to <em>divert</em> traffic away from the scene of the accident.' },
-  { num:39, word:'converse', pos:'동사', type:'wrong',
-    correct:'대화하다, 담화하다', student:'보존하다',
-    tip:'보존하다(conserve)\'와 발음이 비슷하니 주의! \'con(함께)\' 대화하는 것을 떠올리세요.',
-    example:'It\'s difficult to <em>converse</em> with someone when the music is so loud.' },
-  { num:45, word:'antibiotic', pos:'명사', type:'wrong',
-    correct:'항생제, 항생 물질', student:'항체의',
-    tip:'anti(항-)\' + \'bio(생명)\' = 미생물에 대항하는 \'항생제\'. \'항체(antibody)\'와 구분하세요.',
-    example:'The doctor prescribed an <em>antibiotic</em> to treat the bacterial infection.' },
-  { num:47, word:'susceptible', pos:'형용사', type:'blank',
-    correct:'영향을 받기 쉬운, 민감한', student:'(무응답)',
-    tip:'병이나 유혹에 \'쉽게 걸려들기 쉬운\' 상태를 의미합니다. \'cept(잡다)\' 어근을 기억하세요.',
-    example:'Young children are more <em>susceptible</em> to colds and other viruses.' },
-  { num:49, word:'append', pos:'동사', type:'blank',
-    correct:'덧붙이다, 첨부하다', student:'(무응답)',
-    tip:'문서 끝에 \'펜(pen)\'으로 무언가를 \'덧붙이다\'라고 연상하거나, \'appendix(부록)\'를 떠올리세요.',
-    example:'Please <em>append</em> your signature to the bottom of the contract.' }
-];
+/* ============================================================
+   ★ 오답단어 시트 설정 (학생별로 이 두 줄만 변경)
+   ============================================================ */
+const STUDENT_NAME = '박혜인';   // 학생 이름 (헤더에 표시)
+const SHEET_GID    = '104767341';         // scan-ocr 시트에서 이 학생 탭의 gid
+// scan-ocr 스프레드시트 published URL
+const SHEET_CSV_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyO-Sx_N0LFENgIcQp-3ATAHrYOUvLCuEr2Nls8qYKYMnOTRyo5_zJY1hbyA1ONfzcf2UK7kwe3fTP/pub?output=csv';
+/* ============================================================ */
+
+// URL 파라미터에서 날짜 가져오기 (?date=2026-05-17 또는 ?start=2026-05-13&end=2026-05-16)
+const _params = new URLSearchParams(location.search);
+const _date  = _params.get('date')  || '';
+const _start = _params.get('start') || _date;
+const _end   = _params.get('end')   || _date;
+
+const cards = [];
+
 let idx=0,startFace='word',showingBack=false,isAnimating=false;
 document.getElementById('btn-meaning').addEventListener('click',()=>{if(isAnimating)return;startFace='meaning';showingBack=false;document.getElementById('btn-meaning').classList.add('active');document.getElementById('btn-word').classList.remove('active');if(idx<cards.length)renderCard(0);});
 document.getElementById('btn-word').addEventListener('click',()=>{if(isAnimating)return;startFace='word';showingBack=false;document.getElementById('btn-word').classList.add('active');document.getElementById('btn-meaning').classList.remove('active');if(idx<cards.length)renderCard(0);});
-const originalCards=[...cards];let isShuffled=false;
+let originalCards=[];let isShuffled=false;
 function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 document.getElementById('btn-random').addEventListener('click',function(){if(isAnimating)return;haptic(20);if(!isShuffled){const s=shuffleArray(cards);cards.length=0;s.forEach(c=>cards.push(c));isShuffled=true;this.classList.add('shuffled');this.textContent='🔀 랜덤ON';}else{cards.length=0;originalCards.forEach(c=>cards.push(c));isShuffled=false;this.classList.remove('shuffled');this.textContent='🔀 랜덤';}idx=0;showingBack=false;buildDots();renderCard(0);});
 let currentAudio=null;
@@ -231,21 +163,24 @@ function buildDots(){const wrap=document.getElementById('prog-dots');wrap.innerH
 function updateDots(){const isEnd=idx>=cards.length;cards.forEach((_,i)=>{const d=document.getElementById(`dot-${i}`);if(!d)return;d.className='pdot'+(isEnd?' done all':i<idx?' done':i===idx?' current':'');});document.getElementById('cur').textContent=isEnd?'✓':(idx+1);document.getElementById('tot').textContent=cards.length;}
 function buildCardHTML(card){
   const isBlank=card.student==='(무응답)';
+  /* 시트 데이터 전부 esc() 적용 — example만 sanitize 거쳐 <em> 허용 */
+  const eWord=esc(card.word), eCorrect=esc(card.correct), ePos=esc(card.pos),
+        eNum=esc(card.num), eTip=esc(card.tip), eStudent=esc(card.student);
   const badgeType=isBlank?`<span class="badge b-blank">미응답</span>`:`<span class="badge b-wrong">오답</span>`;
-  const studentHTML=`<div class="student-row"><span class="student-label">내 답</span>${isBlank?`<span class="blank-label">— 미응답</span>`:`<span class="student-ans">${card.student}</span>`}</div>`;
-  const badges=`<div class="badges"><span class="badge b-num">No.${card.num}</span>${badgeType}<span class="badge b-pos">${card.pos}</span></div>`;
-  const ttsWord=card.word.replace(/'/g,"&#39;");
-  const ttsBtn=`<button class="tts-btn" onclick="event.stopPropagation();speakWord(this,'${ttsWord}');" type="button">🔊</button>`;
-  const MFACE=`<div class="face-meaning">${badges}<div class="meaning-center"><div class="meaning-label">뜻</div><div class="meaning-text">${card.correct}</div></div><div class="tap-hint">탭해서 영단어 보기</div></div>`;
-  const MBACK=`<div class="face-meaning">${badges}<div class="scroll-area"><div class="word-center" style="min-height:90px"><div class="word-label">영단어</div><div class="word-text">${card.word}</div><div class="word-pos">${card.pos}</div></div>${studentHTML}<div class="tip-box"><div class="tip-title">💡 암기 팁</div>${card.tip}</div><div class="example-box">${card.example}</div></div><div class="tap-hint">탭해서 뜻 보기</div></div>`;
-  const WFACE=`<div class="face-word">${badges}<div class="word-center"><div class="word-label">영단어</div><div class="word-text">${card.word}</div><div class="word-pos">${card.pos}</div></div><div class="tap-hint">탭해서 뜻 보기</div></div>`;
-  const WBACK=`<div class="face-word">${badges}<div class="scroll-area"><div class="word-center" style="min-height:80px"><div class="word-label">영단어</div><div class="word-text" style="font-size:1.6rem">${card.word}</div></div><div class="meaning-label" style="text-align:center;margin-bottom:6px">뜻</div><div class="meaning-text" style="text-align:center;font-size:1.35rem;margin-bottom:10px">${card.correct}</div>${studentHTML}<div class="tip-box"><div class="tip-title">💡 암기 팁</div>${card.tip}</div><div class="example-box">${card.example}</div></div><div class="tap-hint">탭해서 영단어 보기</div></div>`;
+  const studentHTML=`<div class="student-row"><span class="student-label">내 답</span>${isBlank?`<span class="blank-label">— 미응답</span>`:`<span class="student-ans">${eStudent}</span>`}</div>`;
+  const badges=`<div class="badges"><span class="badge b-num">No.${eNum}</span>${badgeType}<span class="badge b-pos">${ePos}</span></div>`;
+  /* TTS 버튼 — 인라인 onclick 제거, data-word 속성 사용 (renderCard에서 리스너 등록) */
+  const ttsBtn=`<button class="tts-btn" type="button" data-word="${eWord}">🔊</button>`;
+  const MFACE=`<div class="face-meaning">${badges}<div class="meaning-center"><div class="meaning-label">뜻</div><div class="meaning-text">${eCorrect}</div></div><div class="tap-hint">탭해서 영단어 보기</div></div>`;
+  const MBACK=`<div class="face-meaning">${badges}<div class="scroll-area"><div class="word-center" style="min-height:90px"><div class="word-label">영단어</div><div class="word-text">${eWord}</div><div class="word-pos">${ePos}</div></div>${studentHTML}<div class="tip-box"><div class="tip-title">💡 암기 팁</div>${eTip}</div><div class="example-box">${card.example}</div></div><div class="tap-hint">탭해서 뜻 보기</div></div>`;
+  const WFACE=`<div class="face-word">${badges}<div class="word-center"><div class="word-label">영단어</div><div class="word-text">${eWord}</div><div class="word-pos">${ePos}</div></div><div class="tap-hint">탭해서 뜻 보기</div></div>`;
+  const WBACK=`<div class="face-word">${badges}<div class="scroll-area"><div class="word-center" style="min-height:80px"><div class="word-label">영단어</div><div class="word-text" style="font-size:1.6rem">${eWord}</div></div><div class="meaning-label" style="text-align:center;margin-bottom:6px">뜻</div><div class="meaning-text" style="text-align:center;font-size:1.35rem;margin-bottom:10px">${eCorrect}</div>${studentHTML}<div class="tip-box"><div class="tip-title">💡 암기 팁</div>${eTip}</div><div class="example-box">${card.example}</div></div><div class="tap-hint">탭해서 영단어 보기</div></div>`;
   return{frontHTML:startFace==='meaning'?MFACE:WFACE,backHTML:startFace==='meaning'?MBACK:WBACK,ttsBtn};
 }
 function buildEndHTML(){return`<div class="end-face"><div class="end-line"></div><div class="end-content"><div class="end-emoji">🎉</div><div><div class="end-label">All Done</div><div class="end-title">학습을 모두 마쳤어요!</div></div><div class="end-subtitle">오답 단어 ${cards.length}개를 모두 복습했어요.<br>한 번 더 반복하면 더욱 확실해져요 ✨</div><button class="restart-btn" id="restart-btn" type="button"><span>↻</span><span>다시 시작하기</span></button><div class="end-hint">→ 스와이프하면 마지막 카드로 돌아가요</div></div></div>`;}
 let cardEl=null;
 function autoPlayTTS(card){if(!card||idx>=cards.length)return;const word=cards[idx].word;const url=`https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${encodeURIComponent(word)}`;if(currentAudio){currentAudio.pause();currentAudio=null;document.querySelectorAll('.tts-btn.playing').forEach(b=>{b.classList.remove('playing');b.dataset.playing='';});}const audio=new Audio(url);currentAudio=audio;const btn=card.querySelector('.tts-btn');if(btn){btn.classList.add('playing');btn.dataset.playing='true';}audio.onended=()=>{if(btn){btn.classList.remove('playing');btn.dataset.playing='';}currentAudio=null;};audio.onerror=()=>{if(btn){btn.classList.remove('playing');btn.dataset.playing='';}currentAudio=null;};audio.play().catch(()=>{if(btn){btn.classList.remove('playing');btn.dataset.playing='';}currentAudio=null;});}
-function renderCard(direction){const vp=document.getElementById('viewport');const old=vp.querySelector('.flash-card,.end-card');const isEnd=idx>=cards.length;const el=document.createElement('div');if(isEnd){el.className='end-card no-transition';el.innerHTML=buildEndHTML();}else{const{frontHTML,backHTML,ttsBtn}=buildCardHTML(cards[idx]);el.className='flash-card no-transition';el.innerHTML=`<div class="card-face"><div class="card-line"></div>${ttsBtn}<div class="card-content">${showingBack?backHTML:frontHTML}</div></div>`;}if(direction!==0){el.style.transform=`translateX(${direction>0?'100%':'-100%'})`;isAnimating=true;}vp.appendChild(el);cardEl=el;if(isEnd){const btn=el.querySelector('#restart-btn');if(btn)btn.addEventListener('click',restart);}requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.remove('no-transition');el.style.transform='translateX(0)';if(!isEnd&&direction!==0&&startFace==='word')setTimeout(()=>autoPlayTTS(el),120);}));if(old){old.classList.remove('no-transition');old.style.transform=`translateX(${direction>0?'-100%':'100%'})`;old.style.opacity='0.3';setTimeout(()=>{if(old.parentNode)old.remove();isAnimating=false;},350);}else{isAnimating=false;if(!isEnd&&startFace==='word')setTimeout(()=>autoPlayTTS(el),120);}updateDots();}
+function renderCard(direction){const vp=document.getElementById('viewport');const old=vp.querySelector('.flash-card,.end-card');const isEnd=idx>=cards.length;const el=document.createElement('div');if(isEnd){el.className='end-card no-transition';el.innerHTML=buildEndHTML();}else{const{frontHTML,backHTML,ttsBtn}=buildCardHTML(cards[idx]);el.className='flash-card no-transition';el.innerHTML=`<div class="card-face"><div class="card-line"></div>${ttsBtn}<div class="card-content">${showingBack?backHTML:frontHTML}</div></div>`;}if(direction!==0){el.style.transform=`translateX(${direction>0?'100%':'-100%'})`;isAnimating=true;}vp.appendChild(el);cardEl=el;if(isEnd){const btn=el.querySelector('#restart-btn');if(btn)btn.addEventListener('click',restart);}else{const tb=el.querySelector('.tts-btn');if(tb)tb.addEventListener('click',e=>{e.stopPropagation();speakWord(tb,tb.dataset.word);});}requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.remove('no-transition');el.style.transform='translateX(0)';if(!isEnd&&direction!==0&&startFace==='word')setTimeout(()=>autoPlayTTS(el),120);}));if(old){old.classList.remove('no-transition');old.style.transform=`translateX(${direction>0?'-100%':'100%'})`;old.style.opacity='0.3';setTimeout(()=>{if(old.parentNode)old.remove();isAnimating=false;},350);}else{isAnimating=false;if(!isEnd&&startFace==='word')setTimeout(()=>autoPlayTTS(el),120);}updateDots();}
 function restart(){if(isAnimating)return;idx=0;showingBack=false;haptic(15);renderCard(-1);}
 function flipCard(el){if(!el||isAnimating||idx>=cards.length||!el.querySelector('.card-face'))return;showingBack=!showingBack;const{frontHTML,backHTML}=buildCardHTML(cards[idx]);const content=el.querySelector('.card-content');const face=el.querySelector('.card-face');face.style.transition='transform 0.15s ease';face.style.transform='scale(0.97)';setTimeout(()=>{content.innerHTML=showingBack?backHTML:frontHTML;face.style.transform='scale(1)';},80);setTimeout(()=>{face.style.transition='';},230);}
 function haptic(ms=8){try{if(navigator.vibrate)navigator.vibrate(ms);}catch(_){}}
@@ -254,7 +189,170 @@ document.addEventListener('keydown',e=>{if(isAnimating)return;if(e.key==='ArrowR
 let lte=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lte<=300)e.preventDefault();lte=n;},{passive:false});
 window.addEventListener('resize',()=>document.documentElement.style.setProperty('--app-vh',`${window.innerHeight*0.01}px`));
 document.documentElement.style.setProperty('--app-vh',`${window.innerHeight*0.01}px`);
-buildDots();initInteraction();renderCard(0);
+
+/* ============================================================
+   CSV 파싱 (쉼표·따옴표 처리)
+   ============================================================ */
+function parseCSV(text){
+  const rows=[];
+  let row=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inQ){
+      if(ch==='"'){
+        if(text[i+1]==='"'){cur+='"';i++;}
+        else inQ=false;
+      } else cur+=ch;
+    } else {
+      if(ch==='"') inQ=true;
+      else if(ch===','){row.push(cur);cur='';}
+      else if(ch==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(ch==='\r'){/* skip */}
+      else cur+=ch;
+    }
+  }
+  if(cur||row.length){row.push(cur);rows.push(row);}
+  return rows;
+}
+
+/* ============================================================
+   날짜 정규화 (YYYY-MM-DD)
+   ============================================================ */
+function normDate(s){
+  if(!s) return '';
+  const m=String(s).trim().match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+  if(!m) return '';
+  return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+}
+
+/* ============================================================
+   상태 메시지
+   ============================================================ */
+function showStatus(html){
+  const m=document.getElementById('status-msg');
+  m.innerHTML=html;
+  m.style.display='block';
+}
+function hideStatus(){document.getElementById('status-msg').style.display='none';}
+
+/* ============================================================
+   헤더 업데이트
+   ============================================================ */
+function updateHeader(name,start,end){
+  document.getElementById('hdr-name').textContent=`바로그영어 · ${name}`;
+  let label='오답 단어장';
+  if(start){
+    const sp=start.split('-');
+    if(start===end || !end){
+      label=`${parseInt(sp[1])}월 ${parseInt(sp[2])}일 오답`;
+    } else {
+      const ep=end.split('-');
+      label=`${parseInt(sp[1])}/${parseInt(sp[2])}~${parseInt(ep[1])}/${parseInt(ep[2])} 오답`;
+    }
+  }
+  document.getElementById('hdr-title').textContent=label;
+  document.title=`오답 단어장 – ${name}`;
+}
+
+/* ============================================================
+   HTML 이스케이프 (XSS 방어)
+   ============================================================ */
+function esc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+/* ============================================================
+   예문 살균 — <em> 태그만 허용, 나머지 전부 이스케이프
+   ============================================================ */
+function sanitizeExample(raw){
+  if(!raw) return '';
+  // 1단계: 전체를 통째로 이스케이프 (모든 태그 무력화)
+  let s = esc(raw);
+  // 2단계: 우리가 의도한 <em>...</em> 만 다시 살림
+  s = s.replace(/&lt;em&gt;/g,'<em>').replace(/&lt;\/em&gt;/g,'</em>');
+  return s;
+}
+
+/* ============================================================
+   단어 강조 (예문에 em 태그 자동 추가)
+   ============================================================ */
+function highlightWord(example, word) {
+  if (!example || !word) return example;
+  if (example.includes('<em>')) return example;
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`\\b(${escaped})\\b`, 'gi');
+  return example.replace(regex, '<em>$1</em>');
+}
+
+/* ============================================================
+   데이터 로드
+   ============================================================ */
+async function loadData(){
+  updateHeader(STUDENT_NAME,_start,_end);
+  if(!_start){
+    showStatus('날짜 정보가 없어요.<br><span style="font-size:0.8rem;color:var(--muted)">예: wrong-flashcard.html?date=2026-05-17</span>');
+    return;
+  }
+  showStatus('<div style="font-size:0.85rem">데이터를 불러오는 중...</div>');
+  try {
+    const url=`${SHEET_CSV_BASE}&gid=${SHEET_GID}&t=${Date.now()}`;
+    const res=await fetch(url);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    const rows=parseCSV(text);
+
+    // 헤더 찾기 (첫 행이 "날짜"로 시작하는지)
+    let startRow=0;
+    if(rows.length && String(rows[0][0]||'').trim()==='날짜') startRow=1;
+
+    // 날짜 범위 필터링
+    for(let i=startRow;i<rows.length;i++){
+      const r=rows[i];
+      if(!r||r.length<5) continue;
+      const dateStr=normDate(r[0]);
+      if(!dateStr) continue;
+      if(dateStr<_start || dateStr>_end) continue;
+
+      const num=String(r[1]||'').trim();
+      const word=String(r[2]||'').trim();
+      const student=String(r[3]||'').trim();
+      const correct=String(r[4]||'').trim();
+      const pos=String(r[5]||'').trim();
+      const tip=String(r[6]||'').trim();
+      const example=highlightWord(sanitizeExample(String(r[7]||'').trim()), word);
+
+      if(!word) continue;
+      const isBlank = student==='빈칸' || student==='' || student==='(무응답)';
+      cards.push({
+        num:num||'-',
+        word:word,
+        pos:pos||'-',
+        type:isBlank?'blank':'wrong',
+        correct:correct||'-',
+        student:isBlank?'(무응답)':student,
+        tip:tip||'-',
+        example:example||''
+      });
+    }
+
+    if(cards.length===0){
+      showStatus(`${STUDENT_NAME}의 ${_start} 오답 데이터가 없어요.<br><span style="font-size:0.8rem;color:var(--muted)">아직 채점이 안 됐거나, 만점을 받았을 수도 있어요 🎉</span>`);
+      return;
+    }
+    originalCards=[...cards];
+    hideStatus();
+    buildDots();initInteraction();renderCard(0);
+  } catch(err){
+    showStatus(`데이터를 불러오지 못했어요.<br><span style="font-size:0.8rem;color:var(--muted)">${err.message}</span>`);
+  }
+}
+
+loadData();
 </script>
 </body>
 </html>
